@@ -192,7 +192,7 @@ getQrw1 <- function(n, weights = NULL, cyclic = FALSE) {
 #' g1 <- gam(y ~ s(idy, bs = "gmrf", xt = list(penalty = Q), k = length(y)-1), method="REML")
 #' summary(g1)
 #' plot(idy, y, xlim = range(idx), ylim = range(x,y))
-#' lines(id, x, col = "blue", lwd = 2)
+#' lines(idx, x, col = "blue", lwd = 2)
 #' pred <- predict(g1, newdata = list(idy = idx), se = TRUE)
 #' lines(idx, pred$fit, col = "red", lwd = 2)
 #' lines(idx, pred$fit + 2*pred$se.fit, col = "red", lty = 2)
