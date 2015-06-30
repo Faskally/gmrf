@@ -106,6 +106,28 @@ Dseasonal <- function(n, m) {
 }
 
 
+#' Differences defining a regional model
+#'
+#' Details
+#'
+#' Description - This function does stuff.
+#'
+#' @param nb the neighbourhood structure of a regional layout
+#' @return a Matrix with a column for each region and a row for each connection / edge
+#' @export
+Dnb <- function(nb) {
+  nnodes <- length(nb)
+  # keep edges in one direction only
+  nb <- lapply(1:nnodes, function(i) nb[[i]] <- nb[[i]][nb[[i]] > i])
+  edge_to <- unlist(nb)
+  nedges <- length(edge_to)
+  nedge_from <- sapply(nb, length)
+  out <- diag(nnodes)[rep(1:nnodes, nedge_from),]
+  ids <- cbind(1:nedges, unlist(nb))
+  out[ids] <- -1
+  out
+}
+
 
 
 # -------------------------------
@@ -128,7 +150,7 @@ Dseasonal <- function(n, m) {
 getQrw1 <- function(n, weights = NULL, cyclic = FALSE) {
   D <- Drw1(n, cyclic = cyclic)
   if (!is.null(weights)) {
-    if (length(weights) != n - 1 + cyclic) {
+    if (length(weights) != nrow(D)) {
       stop("weights must be the same length as the number of unique differences in the GMRF")
     }
     out <- t(D) %*% diag(weights) %*% D
@@ -157,7 +179,7 @@ getQrw1 <- function(n, weights = NULL, cyclic = FALSE) {
 getQrw <- function(n, order = 2, weights = NULL, cyclic = FALSE) {
   D <- Drw(n, order = order, cyclic = cyclic)
   if (!is.null(weights)) {
-    if (length(weights) != n - order + order*cyclic) {
+    if (length(weights) != nrow(D)) {
       stop("weights must be the same length as the number of unique differences in the GMRF")
     }
     out <- t(D) %*% diag(weights) %*% D
@@ -184,7 +206,33 @@ getQrw <- function(n, order = 2, weights = NULL, cyclic = FALSE) {
 getQar <- function(n, phi, weights = NULL) {
   D <- Dar(n, phi)
   if (!is.null(weights)) {
-    if (length(weights) != n) {
+    if (length(weights) != nrow(D)) {
+      stop("weights must be the same length as the number of unique differences in the GMRF")
+    }
+    out <- t(D) %*% diag(weights) %*% D
+  } else {
+    out <- t(D) %*% D
+  }
+  out
+}
+
+
+#' Differences defining a regional model
+#'
+#' Details
+#'
+#' Description - This function does stuff.
+#'
+#' @param nb the neighbourhood structure of a regional layout
+#' @param weights weights to be applied to the node differences in effect
+#'        allowing different connections between regions to vary differently.
+#'        An example of a weight could be the length of the shared border between regions
+#' @return a Matrix with a column for each region and a row for each connection / edge
+#' @export
+getQnb <- function(nb, weights = NULL) {
+  D <- Dnb(nb)
+  if (!is.null(weights)) {
+    if (length(weights) != nrow(D)) {
       stop("weights must be the same length as the number of unique differences in the GMRF")
     }
     out <- t(D) %*% diag(weights) %*% D
