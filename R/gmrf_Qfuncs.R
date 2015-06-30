@@ -175,6 +175,28 @@ getQrw1 <- function(n, weights = NULL, cyclic = FALSE) {
 #' @param cyclic logical: should the smoother be cyclic, i.e.
 #'        corrected for toroidal edge effects. 
 #' @return what does it return
+#' @examples
+#' require(gmrf)
+#' n <- 100
+#' idx <- 1:n
+#' idy <- c(5:40, 60:n)
+#' set.seed(64)
+#' Q <- getQrw(n, order = 2)
+#' x <- simQ(exp(1) * Q)
+#' # simulate the first 3/4, say
+#' y <- x + rnorm(n) * 3.5
+#' y <- y[idy]
+#' ## set up variables for smoothing
+#' rownames(Q) <- colnames(Q) <- idx
+#' ## fit an RW2 smoother with restricted df
+#' g1 <- gam(y ~ s(idy, bs = "gmrf", xt = list(penalty = Q), k = length(y)-1), method="REML")
+#' summary(g1)
+#' plot(idy, y, xlim = range(idx), ylim = range(x,y))
+#' lines(id, x, col = "blue", lwd = 2)
+#' pred <- predict(g1, newdata = list(idy = idx), se = TRUE)
+#' lines(idx, pred$fit, col = "red", lwd = 2)
+#' lines(idx, pred$fit + 2*pred$se.fit, col = "red", lty = 2)
+#' lines(idx, pred$fit - 2*pred$se.fit, col = "red", lty = 2)
 #' @export
 getQrw <- function(n, order = 2, weights = NULL, cyclic = FALSE) {
   D <- Drw(n, order = order, cyclic = cyclic)

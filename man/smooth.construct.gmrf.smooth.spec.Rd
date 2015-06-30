@@ -29,21 +29,24 @@ of type gmrf.  More details to be added.
 \examples{
 require(gmrf)
 n <- 100
-set.seed(2)
-Q <- getQrw(100, order = 2)
+idx <- 1:n
+idy <- c(5:40, 60:n)
+set.seed(64)
+Q <- getQrw(n, order = 2)
 x <- simQ(exp(1) * Q)
-y <- x + rnorm(n) * 3
+# simulate the first 3/4, say
+y <- x + rnorm(n) * 3.5
+y <- y[idy]
 ## set up variables for smoothing
-id <- 1:length(x)
-rownames(Q) <- colnames(Q) <- id
-## fit an RW2 smoother
-g1 <- gam(y ~ s(id, bs = "gmrf", xt = list(penalty = Q)), method="REML")
+rownames(Q) <- colnames(Q) <- idx
+## fit an RW2 smoother with restricted df
+g1 <- gam(y ~ s(idy, bs = "gmrf", xt = list(penalty = Q), k = length(y)-1), method="REML")
 summary(g1)
-plot(id, y)
+plot(idy, y, xlim = range(idx), ylim = range(x,y))
 lines(id, x, col = "blue", lwd = 2)
-lines(id, fitted(g1), col = "red", lwd = 2)
-sefit <- predict(g1, se = TRUE) $ se.fit
-lines(id, fitted(g1) + 2*sefit, col = "red", lty = 2)
-lines(id, fitted(g1) - 2*sefit, col = "red", lty = 2)
+pred <- predict(g1, newdata = list(idy = idx), se = TRUE)
+lines(idx, pred$fit, col = "red", lwd = 2)
+lines(idx, pred$fit + 2*pred$se.fit, col = "red", lty = 2)
+lines(idx, pred$fit - 2*pred$se.fit, col = "red", lty = 2)
 }
 
