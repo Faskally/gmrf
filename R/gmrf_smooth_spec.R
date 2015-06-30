@@ -20,11 +20,11 @@
 #' set.seed(2)
 #' Q <- getQrw(100, order = 2)
 #' x <- simQ(exp(1) * Q)
-#' y <- x + rnorm(n) * 2
+#' y <- x + rnorm(n) * 3
 #' ## set up variables for smoothing
 #' id <- 1:length(x)
 #' rownames(Q) <- colnames(Q) <- id
-#' ## is smooth significantly different from straight line?
+#' ## fit an RW2 smoother
 #' g1 <- gam(y ~ s(id, bs = "gmrf", xt = list(penalty = Q)), method="REML")
 #' summary(g1)
 #' plot(id, y)
