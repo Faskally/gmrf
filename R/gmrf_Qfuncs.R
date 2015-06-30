@@ -239,6 +239,35 @@ getQar <- function(n, phi, weights = NULL) {
 }
 
 
+
+#' Differences defining a regional model from spatial polygons... 
+#'
+#' Details
+#'
+#' Description - This function does stuff.
+#'
+#' @param poly a spatial polygon
+#' @param weights weights to be applied to the node differences in effect
+#'        allowing different connections between regions to vary differently.
+#'        An example of a weight could be the length of the shared border between regions
+#' @return a Matrix with a column for each region and a row for each connection / edge
+#' @export
+getQpoly <- function(poly, weights = NULL) {
+  nb <- spdep::poly2nb(poly, queen = FALSE)
+  
+  D <- Dnb(nb)
+  if (!is.null(weights)) {
+    if (length(weights) != nrow(D)) {
+      stop("weights must be the same length as the number of unique differences in the GMRF")
+    }
+    out <- t(D) %*% diag(weights) %*% D
+  } else {
+    out <- t(D) %*% D
+  }
+  rownames(out) <- colnames(out) <- attr(nb, "region.id")
+  out
+}
+
 #' Differences defining a regional model
 #'
 #' Details
@@ -261,5 +290,31 @@ getQnb <- function(nb, weights = NULL) {
   } else {
     out <- t(D) %*% D
   }
+  rownames(out) <- colnames(out) <- attr(nb, "region.id")
+  out
+}
+
+#' Differences defining a regional model
+#'
+#' This one is for back compatability
+#'
+#' Description - This function does stuff.
+#'
+#' @param nbmat the neighbourhood structure of a regional layout as a matrix
+#' @param weights weights to be applied to the node differences in effect
+#'        allowing different connections between regions to vary differently.
+#'        An example of a weight could be the length of the shared border between regions
+#' @return a Matrix with a column for each region and a row for each connection / edge
+#' @export
+getRegionalGMRF <- function(nbmat, weights = NULL) {
+  nbmat <- as(nbmat, "dgTMatrix")
+
+  out <- nbmat
+  if (any(out @ x == 0)) stop("something went wrong")
+  out @ x[] <- -1/out @ x
+  diag(out) <- rowSums(nbmat)
+  out <- as.matrix(out)
+
+  colnames(out) <- rownames(out) <- rownames(nbmat)
   out
 }

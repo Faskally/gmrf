@@ -4,5 +4,7 @@
 #' @name gmrf
 #' @import mgcv
 #' @import Matrix
+#' @importFrom spdep poly2nb
+#' @importFrom spdep nb2mat
 #'
 NULL
