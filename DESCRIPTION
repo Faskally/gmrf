@@ -2,8 +2,10 @@ Package: gmrf
 Title: Lightweight helper for fitting GMRF models in mgcv
 Version: 0.0.1
 Authors@R: as.person("Colin Millar <C.Millar@marlab.ac.uk> [aut, cre]")
-Description: The package contains a set of functions to help with the fitting of gmrf 
-             models in mgcv
+Description: The package contains a set of functions to help with the fitting of 
+             gmrf models in mgcv.  The package is intended for the fitting GMRF models
+             such as random walks and seasonal effects.  The code is written as simply
+             as possible to make is easy to see how GMRFs are constructed.
 Depends: 
      R (>= 3.1.0),
      mgcv (>= 1.8-3),
