@@ -15,16 +15,24 @@
 #' @param knots not used.
 #' @return An object of class `"gmrf.smooth"'.
 #' @examples
-#' require(mgcv)
+#' require(gmrf)
 #' n <- 100
 #' set.seed(2)
-#' x <- runif(n)
-#' y <- x + x^2*.2 + rnorm(n) *.1
+#' Q <- getQrw(100, order = 2)
+#' x <- simQ(exp(1) * Q)
+#' y <- x + rnorm(n) * 2
+#' ## set up variables for smoothing
+#' id <- 1:length(x)
+#' rownames(Q) <- colnames(Q) <- id
 #' ## is smooth significantly different from straight line?
-#' summary(gam(y~s(x,m=c(2,0))+x,method="REML")) ## not quite
-#' ## is smooth significatly different from zero?
-#' summary(gam(y~s(x),method="REML")) ## yes!
-#' ## see ?gam
+#' g1 <- gam(y ~ s(id, bs = "gmrf", xt = list(penalty = Q)), method="REML")
+#' summary(g1)
+#' plot(id, y)
+#' lines(id, x, col = "blue", lwd = 2)
+#' lines(id, fitted(g1), col = "red", lwd = 2)
+#' sefit <- predict(g1, se = TRUE) $ se.fit
+#' lines(id, fitted(g1) + 2*sefit, col = "red", lty = 2)
+#' lines(id, fitted(g1) - 2*sefit, col = "red", lty = 2)
 #' @export
 smooth.construct.gmrf.smooth.spec <- function(object, data, knots) {
     k <- factor(rownames(object$xt$penalty), levels = rownames(object$xt$penalty))

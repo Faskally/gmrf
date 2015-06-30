@@ -5,11 +5,11 @@ Authors@R: as.person("Colin Millar <C.Millar@marlab.ac.uk> [aut, cre]")
 Description: The package contains a set of functions to help with the fitting of gmrf 
              models in mgcv
 Depends: 
-     R (>= 3.1.1),
-     mgcv (>= 1.8-3)
+     R (>= 3.1.0),
+     mgcv (>= 1.8-3),
+     Matrix (>= 1.1-4)
 Suggests:
     knitr (>= 1.8)
 License: file LICENSE
 LazyData: true
 VignetteBuilder: knitr
-

@@ -2,7 +2,7 @@
 % Please edit documentation in R/gmrf_smooth_spec.R
 \name{Predict.matrix.gmrf.smooth}
 \alias{Predict.matrix.gmrf.smooth}
-\title{Estimate capture probabilites from electrofishing data}
+\title{Predict from a gmrf smoother}
 \usage{
 \method{Predict.matrix}{gmrf.smooth}(object, data)
 }
@@ -19,7 +19,6 @@ last element.}
 A design matrix
 }
 \description{
-This function uses the marginal likelihood of capture probabilities
-to estimate model parameters
+This function gives predictions from a gmrf smoother
 }
 

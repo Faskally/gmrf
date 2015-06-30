@@ -3,5 +3,6 @@
 #' @docType package
 #' @name gmrf
 #' @import mgcv
+#' @import Matrix
 #'
 NULL
