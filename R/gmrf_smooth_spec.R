@@ -94,7 +94,7 @@ smooth.construct.gmrf.smooth.spec <- function(object, data, knots) {
     object$plot.me <- FALSE
     #object$fixed <- FALSE # force penalty - no sense in allowing fixed to be false
     # specify the constraints
-    #object $ C <- NULL 
+    object $ C <- object $ xt $ constraint  
 
     class(object) <- "gmrf.smooth"
     object
