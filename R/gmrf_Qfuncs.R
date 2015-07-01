@@ -117,6 +117,7 @@ Dseasonal <- function(n, m) {
 #' @export
 Dnb <- function(nb) {
   nnodes <- length(nb)
+  region.id <- attr(nb, "region.id")
   # keep edges in one direction only
   nb <- lapply(1:nnodes, function(i) nb[[i]] <- nb[[i]][nb[[i]] > i])
   edge_to <- unlist(nb)
@@ -125,6 +126,8 @@ Dnb <- function(nb) {
   out <- diag(nnodes)[rep(1:nnodes, nedge_from),]
   ids <- cbind(1:nedges, unlist(nb))
   out[ids] <- -1
+  colnames(out) <- region.id
+  rownames(out) <- 1:nrow(out)
   out
 }
 
