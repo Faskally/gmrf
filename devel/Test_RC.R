@@ -78,96 +78,119 @@ plot(hma, col = pcols)
 # lets try a spatial effect with discontinuities
 #
 # -----------------------------------------------
- 
 
-## try one for disconnected catchments
+pkg <- devtools::as.package("C:/work/repos/Faskally/gmrf")
+devtools::load_all(pkg)
+library(sp)
+library(magrittr)
+
+ 
+# -------------------------------------
+# get data
+# -------------------------------------
+
 # load catchments
 ctm <- rgdal::readOGR("P:/vector/nationalgrid/Catchment/SEPA","Baseline_confluence_nested_catchments")
 load("C:/work/repos/Faskally/gmrf/devel/ctm_data.rData")
 ctm @ data <- ctm_data
 hma <- CLdata::hma
-library(sp)
 
 
 # Select a few
-#hanames <- c("Esk Group", "Deveron Group", "Dee (Aberdeenshire)", "Don (Aberdeenshire)", "Spey","Ythan Group")
 hanames <- c("Esk Group", "Deveron Group")
 ctm <- ctm[ctm $ HAName %in% hanames,]
-hma <- hma[hma $ HAName %in% hanames,]
-
 # remove "605" so we have a singleton catchment
 ctm <- ctm[rownames(ctm@data) != "605",]
+hma <- hma[hma $ HAName %in% hanames,]
 
-plot(ctm, col = grey(0.8))
-plot(hma, lwd = 2, add = TRUE)
-text(coordinates(ctm), labels = rownames(ctm@data), cex = 0.5)
+# -------------------------------------
+# get GMRF
+# -------------------------------------
 
-# get neighbours
 nb <- spdep::poly2nb(ctm, queen = FALSE)
-# look at the adjacency matrice
-library(magrittr)
-Dnb(nb) %>% replace(. == 0, ".") %>% as.table(.)
-
-
 Q <- getQnb(nb)
+
 Q %>% replace(. == 0, ".") %>% as.table(.)
 
-# identify singletons
-singles <- which(diag(Q) == 0)
 
-# remove singletons from spatial matrix
-Qsub <- Q[-singles, -singles]
+# -------------------------------------
+# Get constraint martrix and a factor for grouping
+# -------------------------------------
 
-# the null space of Q tells you how many groups
-## the vectors of the null space correspond to the individual regions
-nullQ <- MASS::Null(Qsub)
-rownames(nullQ) <- rownames(ctm@data)[-singles]
-Matrix(nullQ, sparse = TRUE)
-null.space.dim <- ncol(nullQ)
+constraint <- getCnb(Q)
+ctmgrp <- getFactorsnb(Q)
 
-ctm $ grp <- 0
-ctm @ data $ grp[-singles] <- rowSums((nullQ != 0) * rep(1:null.space.dim, each = nrow(nullQ)))
-plot(ctm, col = ctm$grp+1)
+# visualise groupings
+plot(ctm, col = ctmgrp)
 
-# create codes for groups of catchments
-ctm $ ctmgrp <- NA
-ctm @ data $ ctmgrp[singles] <- seq_along(singles)
-ctm @ data $ ctmgrp[-singles] <- rowSums((nullQ != 0) * rep(1:rank, each = nrow(nullQ))) + length(singles)
 
-# so the idea would be to constrain each group to sum to zero...
-X <- model.matrix(~ factor(ctmgrp) - 1, ctm @ data)
+# -------------------------------------
+# simulate some data
+# -------------------------------------
+
+# design matrix for catchment group means
+X <- model.matrix(~ ctmgrp - 1)
 cmu <- c(1, 2, 3) * 2
 
+# spatial effect (in effect catchment within catchment group)
 x <- simQ(Q)
-tapply(x, ctm $ ctmgrp, mean) #  looks like groups are zero
+# check groups sum to zero
+tapply(x, ctmgrp, mean)
 
+# simulate observations, 1 per region in this case 
 y <- x + c(X %*% cmu) + rnorm(length(x))*0.5
 
+# get region ids for observations
+# note region ID should not be character
+# it can either be numeric, or a factor.
+cid <- factor(rownames(ctm @ data))
+
+# collect data in a list
+dat <- data.frame(y = y, cid = cid, ctmgrp)
+
+# collect smoother details in a list
+xt <- list(penalty = Q, constraint = constraint)
+
+# plot simulation
 breaks <- seq(min(y)-0.001, max(y)+0.001, length = 11)
-xcolgrp <- as.numeric(cut(y, breaks))
-xcols <- heat.colors(10)[xcolgrp]
-plot(ctm, col = xcols)
+plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(y, breaks))])
 
-cid <- rownames(ctm @ data)
-cid <- 1:length(x)
-rownames(Q) <- colnames(Q) <- cid
-constraint <- matrix(0, null.space.dim + length(singles), nrow(Q))
-constraint[1:null.space.dim,-singles] <- t(nullQ) %>% replace(. != 0, 1)
-constraint[-(1:null.space.dim), singles] <- diag(length(singles))
+# -------------------------------------
+# fit a model
+# -------------------------------------
 
-ctmgrp <- ctm $ ctmgrp
+# use REML this time
+g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xt), method="REML", data = dat)
 
-g1 <- gam(y ~ -1 + factor(ctmgrp) + s(cid, bs = "gmrf", xt = list(penalty = Q, constraint = constraint)), method="REML")
 summary(g1)
-tapply(fitted(g1), ctm $ ctmgrp, mean) #  looks like groups are zero
+# check groups sum to ctm group means
+tapply(fitted(g1), dat$ctmgrp, mean)
 
 # plot fitted values
-xcolgrp <- as.numeric(cut(fitted(g1), breaks))
-xcols <- heat.colors(10)[xcolgrp]
-plot(ctm, col = xcols)
-
-# extract just catchment spatial effect
+plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(fitted(g1), breaks))])
 
 
-##mgcv:::plot.mgcv.smooth
-## but what happens if we drop off number
+
+# -----------------------------------------------
+#
+# lets try a reduced rank spatial effect with discontinuities
+#
+# -----------------------------------------------
+
+# run all of the previous code to get data and GMRF model
+
+# what does
+
+
+
+
+# use REML this time
+g1 <- gam(y ~ -1 + ctmgrp + s(cid, k = 20, bs = "gmrf", xt = xt), method="REML", data = dat)
+
+summary(g1)
+# check groups sum to ctm group means
+tapply(fitted(g1), dat$ctmgrp, mean)
+
+# plot fitted values
+plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(fitted(g1), breaks))])
+
