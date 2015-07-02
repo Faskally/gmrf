@@ -11,7 +11,8 @@ Depends:
      mgcv (>= 1.8-3),
      Matrix (>= 1.1-4)
 Imports:
-     spdep (>= 0.5-77)    
+     spdep (>= 0.5-77),
+     MASS (>= 7.3-35)    
 Suggests:
     knitr (>= 1.8)
 License: file LICENSE

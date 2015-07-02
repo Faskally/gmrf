@@ -4,7 +4,7 @@
 \alias{getFactorsnb}
 \title{Get a constraint matrix for a regional GMRF}
 \usage{
-getFactorsnb(Q, constraint = NULL)
+getFactorsnb(Q)
 }
 \arguments{
 \item{Q}{a precision matrix for a regional GMRF}

@@ -341,14 +341,14 @@ getCnb <- function(Q) {
   # the null space dimension of Q tells you how many groups
   # the vectors of the null space correspond to the individual regions
   # but need to strip out singletons first to get more interpretable vectors
-  nullQ <- MASS::Null(Qsub)
+  nullQ <- Null(Qsub)
 
   # how many distinct groupings?
   null.space.dim <- ncol(nullQ)
 
   # build constraint
   constraint <- matrix(0, null.space.dim + length(singles), nrow(Q))
-  constraint[1:null.space.dim,-singles] <- t(nullQ) %>% replace(. != 0, 1)
+  constraint[1:null.space.dim,-singles] <- replace(t(nullQ) != 0, 1)
   constraint[-(1:null.space.dim), singles] <- diag(length(singles))
 
   constraint
@@ -363,28 +363,27 @@ getCnb <- function(Q) {
 #' @param Q a precision matrix for a regional GMRF
 #' @return a Matrix with a column for each region and a row for each distinct group
 #' @export
-getFactorsnb <- function(Q, constraint = NULL) {
-  if (!is.null(constraint)) {
-    # create a variable for groupings using constraint
-    grp <- colSums(row(constraint) * constraint)
-  } else {
-    # create a variable for groupings using Q
-    # identify singletons
-    singles <- which(diag(Q) == 0)
+getFactorsnb <- function(Q) {
+  # create a variable for groupings using Q
+  # identify singletons
+  singles <- which(diag(Q) == 0)
 
-    # remove singletons from spatial matrix
-    Qsub <- Q[-singles, -singles]
+  # remove singletons from spatial matrix
+  Qsub <- Q[-singles, -singles]
 
-    # the null space dimension of Q tells you how many groups
-    # the vectors of the null space correspond to the individual regions
-    # but need to strip out singletons first to get more interpretable vectors
-    nullQ <- MASS::Null(Qsub)
+  # the null space dimension of Q tells you how many groups
+  # the vectors of the null space correspond to the individual regions
+  # but need to strip out singletons first to get more interpretable vectors
+  nullQ <- Null(Qsub)
 
-    # create a variable for groupings
-    grp <- rep(NA, ncol(Q))
-    grp[-singles] <- rowSums((nullQ != 0) * rep(1:null.space.dim, each = nrow(nullQ)))
-    grp[singles] <- seq_along(singles) + null.space.dim
-  }
+  # how many distinct groupings?
+  null.space.dim <- ncol(nullQ)
+
+  # create a variable for groupings
+  grp <- rep(NA, ncol(Q))
+  grp[-singles] <- rowSums((nullQ != 0) * rep(1:null.space.dim, each = nrow(nullQ)))
+  grp[singles] <- seq_along(singles) + null.space.dim
+  
   factor(grp)
 }
 
