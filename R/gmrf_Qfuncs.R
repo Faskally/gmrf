@@ -348,7 +348,7 @@ getCnb <- function(Q) {
 
   # build constraint
   constraint <- matrix(0, null.space.dim + length(singles), nrow(Q))
-  constraint[1:null.space.dim,-singles] <- replace(t(nullQ) != 0, 1)
+  constraint[1:null.space.dim,-singles] <- replace(t(nullQ), t(nullQ) != 0, 1)
   constraint[-(1:null.space.dim), singles] <- diag(length(singles))
 
   constraint

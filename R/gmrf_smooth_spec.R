@@ -44,7 +44,8 @@ smooth.construct.gmrf.smooth.spec <- function(object, data, knots) {
     #k <- factor(levels(x), levels = levels(x))
     if (object$bs.dim < 0) object$bs.dim <- length(levels(k))
     if (object$bs.dim > length(levels(k))) stop("GMRF basis dimension set too high")
-    object$X <- model.matrix(~x - 1, )
+    object$X <- model.matrix(~ x - 1, )
+
     # penalty
     object$S[[1]] <- object$xt$penalty
     if (ncol(object$S[[1]]) != nrow(object$S[[1]])) 
@@ -64,9 +65,28 @@ smooth.construct.gmrf.smooth.spec <- function(object, data, knots) {
         }
     }
 
-    if (object$bs.dim < length(levels(k))) {
+    # get rank of full smoother
+    if (!is.null(object $ xt $ rank)) {
+      Qrank <- object $ xt $ rank
+    }
+    else {
+        message("estimating the rank of the gmrf smooth via eigen decomp.  Supply via 'xt' to avoid this.")
+        ev <- eigen(object$S[[1]], symmetric = TRUE, only.values = TRUE)$values
+        Qrank <- sum(ev > .Machine$double.eps^0.8 * max(ev))
+    }
+    null.space.dim <- length(levels(k)) - Qrank
+
+    # this section applies reduced rank reduction
+    # note that the null space is always retained
+    reduceRank <- object$bs.dim < length(levels(k))
+    if (reduceRank) {
+        if (object$bs.dim <= (null.space.dim + 1)) {
+          object$bs.dim <- null.space.dim + 2
+          message("k has been increased to 2 + null space dimension = ", object$bs.dim)
+        }
         mi <- which(colSums(object$X) == 0)
         np <- ncol(object$X)
+        # if there are missing observations?
         if (length(mi) > 0) {
             object$X <- rbind(matrix(0, length(mi), np), object$X)
             for (i in 1:length(mi)) object$X[i, mi[i]] <- 1
@@ -77,24 +97,22 @@ smooth.construct.gmrf.smooth.spec <- function(object, data, knots) {
             rp$X[-(1:length(mi)), ind]
         else rp$X[, ind]
         object$P <- rp$P[, ind]
-        object$S[[1]] <- diag(c(rp$D[ind[ind <= rp$rank]], rep(0, 
-            sum(ind > rp$rank))))
+        object$S[[1]] <- diag(c(rp$D[ind[ind <= rp$rank]], rep(0, sum(ind > rp$rank))))
         object$rank <- rp$rank
-    }
-    else if (!is.null(object $ xt $ rank)) {
-      object$rank <- object $ xt $ rank
-    }
-    else {
-        ev <- eigen(object$S[[1]], symmetric = TRUE, only.values = TRUE)$values
-        object$rank <- sum(ev > .Machine$double.eps^0.8 * max(ev))
-    }
+    } else {
+        object$rank <- Qrank
+    } 
     object$null.space.dim <- ncol(object$X) - object$rank
     object$knots <- k
     object$df <- ncol(object$X)
     object$plot.me <- FALSE
     #object$fixed <- FALSE # force penalty - no sense in allowing fixed to be false
     # specify the constraints
-    object $ C <- object $ xt $ constraint  
+    object $ C <- object $ xt $ constraint
+    # if reduced rank gmrfs are used - we need to also reduce the constraints!
+    if (reduceRank & !is.null(object $ C)) {
+      object $ C <- object $ C %*% t(MASS::ginv(object $ X))    
+    }
 
     class(object) <- "gmrf.smooth"
     object

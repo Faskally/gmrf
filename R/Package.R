@@ -7,5 +7,6 @@
 #' @importFrom spdep poly2nb
 #' @importFrom spdep nb2mat
 #' @importFrom MASS Null
+#' @importFrom MASS ginv
 #'
 NULL

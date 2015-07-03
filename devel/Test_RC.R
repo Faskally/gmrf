@@ -150,6 +150,8 @@ dat <- data.frame(y = y, cid = cid, ctmgrp)
 
 # collect smoother details in a list
 xt <- list(penalty = Q, constraint = constraint)
+# provide rank to avoid calculating this at every fit
+xtr <- list(penalty = Q, constraint = constraint, rank = nrow(Q) - nrow(constraint))
 
 # plot simulation
 breaks <- seq(min(y)-0.001, max(y)+0.001, length = 11)
@@ -161,6 +163,7 @@ plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(y, breaks))])
 
 # use REML this time
 g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xt), method="REML", data = dat)
+#g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xtr), method="REML", data = dat)
 
 summary(g1)
 # check groups sum to ctm group means
@@ -177,15 +180,17 @@ plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(fitted(g1), breaks)
 #
 # -----------------------------------------------
 
-# run all of the previous code to get data and GMRF model
+# in this case, the eigen value decomposition used to reduce the
+# rank of the smoother matrix results in regions with more connections
+# getting more relative degrees of freedom in the reduced rank
+# approx, as is the case in the full GMRF model
 
-# what does
+# at the moment, k must be equal to the number of groups with connections + null.space
+#g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xt, k = 6), method="REML", data = dat)
+g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xtr, k = 3), method="REML", data = dat)
 
-
-
-
-# use REML this time
-g1 <- gam(y ~ -1 + ctmgrp + s(cid, k = 20, bs = "gmrf", xt = xt), method="REML", data = dat)
+# note it may not be the case the the appropriate thing is to add 2 to the null space dim
+# I am pretty sure it is though...
 
 summary(g1)
 # check groups sum to ctm group means
@@ -193,4 +198,6 @@ tapply(fitted(g1), dat$ctmgrp, mean)
 
 # plot fitted values
 plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(fitted(g1), breaks))])
+
+
 
