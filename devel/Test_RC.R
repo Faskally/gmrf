@@ -188,6 +188,7 @@ plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(fitted(g1), breaks)
 # at the moment, k must be equal to the number of groups with connections + null.space
 #g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xt, k = 6), method="REML", data = dat)
 g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xtr, k = 3), method="REML", data = dat)
+g1 <- gam(y ~ -1 + ctmgrp + s(cid, bs = "gmrf", xt = xtr, k = 10), method="REML", data = dat)
 
 # note it may not be the case the the appropriate thing is to add 2 to the null space dim
 # I am pretty sure it is though...
@@ -200,4 +201,15 @@ tapply(fitted(g1), dat$ctmgrp, mean)
 plot(ctm, col = heat.colors(length(breaks)-1)[as.numeric(cut(fitted(g1), breaks))])
 
 
+# -----------------------------------------------
+#
+# A more advanced example would weight the differences between regions
+# 
+# One suggestion, from ripley, is to use the length of the common border
+# another is to use the distance between the centroids
+# yet another might be to somehow incorporate the size of the areas
+#
+# -----------------------------------------------
+
+# For another day!
 
